@@ -271,13 +271,18 @@ body.focus-mode #editor-scroll{padding:70px 80px}
 
 @media print{
   #topbar,#sidebar,#toolbar,#statusbar,#tags-bar,#findbar,.img-toolbar,.img-resize-handle,#sidebar-overlay,#print-preview-overlay{display:none!important}
-  #editor-scroll{overflow:visible;padding:0}
-  body{background:#fff;color:#000;overflow:auto}
-  #content-editor{color:#000}
-  #note-header{border-color:#ccc}
-  #disp-title,#disp-chapter{color:#000}
-  .page-break-marker{page-break-after:always;break-after:page;height:0;overflow:hidden;display:block!important;border:none!important;margin:0!important;padding:0!important}
+  body,html{height:auto!important;overflow:visible!important;background:#fff!important}
+  #main,#editor-area{overflow:visible!important;height:auto!important;display:block!important}
+  #editor-scroll{overflow:visible!important;padding:20px 40px!important;height:auto!important;display:block!important}
+  #editor-wrapper{max-width:none!important}
+  #content-editor{color:#000!important;min-height:0!important}
+  #note-header{border-color:#ccc!important}
+  #disp-title,#disp-chapter{color:#000!important}
+  .page-break-marker{page-break-after:always!important;break-after:page!important;height:0!important;overflow:hidden!important;display:block!important;border:none!important;margin:0!important;padding:0!important;visibility:hidden}
   .page-break-marker *{display:none!important}
+  pre{white-space:pre-wrap;page-break-inside:avoid}
+  table{page-break-inside:avoid}
+  img{page-break-inside:avoid;max-width:100%}
 }
 
 /* PAGE BREAK MARKER */
@@ -323,20 +328,7 @@ body.focus-mode #editor-scroll{padding:70px 80px}
 #pp-scroll::-webkit-scrollbar{width:6px}
 #pp-scroll::-webkit-scrollbar-thumb{background:#666;border-radius:3px}
 
-/* Simulated pages */
-.pp-page{
-  width:210mm;min-height:297mm;
-  background:#fff;color:#111;
-  padding:18mm 16mm;
-  box-shadow:0 4px 28px rgba(0,0,0,.5);
-  position:relative;
-  font-family:Georgia,serif;font-size:11pt;line-height:1.7;
-  margin-bottom:0;
-}
-.pp-page-num{
-  position:absolute;bottom:10mm;right:14mm;
-  font-size:9pt;color:#aaa;font-family:'DM Sans',sans-serif;
-}
+/* Simulated pages — rendered inline via JS */
 .pp-page-break-line{
   width:210mm;height:16px;
   display:flex;align-items:center;justify-content:center;
@@ -351,40 +343,7 @@ body.focus-mode #editor-scroll{padding:70px 80px}
   content:'';flex:1;max-width:60px;height:1px;background:#e8c547;opacity:.4;
 }
 
-/* Print preview note header */
-.pp-note-header{margin-bottom:14px;border-bottom:2px solid #111;padding-bottom:12px}
-.pp-note-header .pp-chapter{font-size:8pt;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:5px}
-.pp-note-header .pp-title{font-size:22pt;font-weight:800;margin:0 0 4px;line-height:1.2}
-.pp-note-header .pp-subtitle{font-size:12pt;color:#555;font-style:italic;margin:0}
-.pp-note-header .pp-date{font-size:8pt;color:#aaa;margin-top:6px}
-
-/* Print preview content styling */
-.pp-content h1{font-size:17pt;font-weight:700;margin:16px 0 7px;line-height:1.2}
-.pp-content h2{font-size:13pt;font-weight:600;margin:13px 0 6px;border-bottom:1px solid #ddd;padding-bottom:3px}
-.pp-content h3{font-size:11pt;font-weight:700;margin:10px 0 5px;color:#444}
-.pp-content p{margin-bottom:7px}
-.pp-content pre{background:#f4f4f4;border:1px solid #ddd;border-radius:4px;padding:9px 12px;font-size:8.5pt;overflow:auto;margin:10px 0}
-.pp-content code{font-family:monospace;font-size:9pt;background:#f0f0f0;padding:1px 4px;border-radius:3px}
-.pp-content pre code{background:none;padding:0}
-.pp-content table{border-collapse:collapse;width:100%;margin:10px 0;font-size:9.5pt}
-.pp-content th{background:#f0f0f0;padding:6px 10px;text-align:left;border-bottom:2px solid #ccc;font-weight:600}
-.pp-content td{padding:5px 10px;border-bottom:1px solid #e0e0e0}
-.pp-content blockquote{border-left:3px solid #999;padding:6px 13px;margin:10px 0;color:#555;font-style:italic}
-.pp-content ul,.pp-content ol{padding-left:20px;margin-bottom:9px}
-.pp-content li{margin-bottom:3px}
-.pp-content img{max-width:100%;border-radius:4px}
-.pp-content .callout{padding:8px 12px;background:#f9f9f9;border:1px solid #ddd;border-left:3px solid #999;border-radius:4px;margin:10px 0;font-size:9.5pt}
-.pp-content .callout.info{border-left-color:#60a5fa}
-.pp-content .callout.warn{border-left-color:#e8c547}
-.pp-content .callout.success{border-left-color:#4ade80}
-.pp-content .callout.error{border-left-color:#ff5f5f}
-.pp-content .math-block{text-align:center;padding:8px;background:#f4f4f8;border-radius:4px;font-size:10pt;margin:10px 0}
-.pp-content mark{background:rgba(255,220,0,.3);padding:1px 3px}
-.pp-content .page-break-marker,.pp-content .img-toolbar,.pp-content .img-resize-handle{display:none!important}
-
 @media(max-width:850px){
-  .pp-page{width:100%;min-height:unset}
-  .pp-page-break-line{width:100%}
   #pp-scroll{padding:16px 8px;gap:0}
 }
 </style>
@@ -1001,19 +960,140 @@ function openPrintPreview() {
   const overlay = document.getElementById('print-preview-overlay');
   const scroll  = document.getElementById('pp-scroll');
   document.getElementById('pp-topbar-subtitle').textContent = n?.title ? `— ${n.title}` : '';
+  scroll.innerHTML = '<div style="color:#aaa;text-align:center;padding:40px;font-family:sans-serif">Rendering preview…</div>';
+  overlay.classList.add('open');
+
+  // Let overlay render first, then paginate
+  requestAnimationFrame(() => setTimeout(() => buildPreview(n, scroll), 60));
+}
+
+function buildPreview(n, scroll) {
   scroll.innerHTML = '';
 
-  // Clone editor content, strip img toolbars & page-break markers for splitting
-  const raw = document.createElement('div');
-  raw.innerHTML = editor.innerHTML;
-  raw.querySelectorAll('.img-toolbar,.img-resize-handle').forEach(el=>el.remove());
+  // Page dimensions in px at 96dpi: A4 = 210mm x 297mm
+  // 1mm = 3.7795px  →  A4 content area with 18mm margins = (210-36)*3.7795 ≈ 659px wide, (297-36)*3.7795 ≈ 986px tall
+  const PAGE_W_PX  = 794;   // full A4 width at 96dpi
+  const PAGE_H_PX  = 1123;  // full A4 height at 96dpi
+  const MARGIN_PX  = 68;    // ~18mm
+  const CONTENT_H  = PAGE_H_PX - MARGIN_PX * 2 - 40; // subtract header/footer space
 
-  // Split content at page-break markers
-  const segments = splitAtPageBreaks(raw);
+  // Build a hidden measuring container at exactly page width
+  const measurer = document.createElement('div');
+  measurer.style.cssText = `position:fixed;left:-9999px;top:0;width:${PAGE_W_PX - MARGIN_PX*2}px;visibility:hidden;font-family:Georgia,serif;font-size:11pt;line-height:1.7;color:#111;background:#fff`;
+  document.body.appendChild(measurer);
 
-  segments.forEach((segHtml, idx) => {
+  // Build full content DOM (header + body)
+  const fullContent = document.createElement('div');
+
+  // Note header block
+  const hdrBlock = document.createElement('div');
+  hdrBlock.style.cssText = 'margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:12px';
+  hdrBlock.innerHTML = `
+    ${n?.chapter ? `<div style="font-size:8pt;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:5px">${esc(n.chapter)}</div>` : ''}
+    <div style="font-size:22pt;font-weight:800;margin:0 0 4px;line-height:1.2;font-family:Georgia,serif">${esc(n?.title||'Untitled Note')}</div>
+    ${n?.subtitle ? `<div style="font-size:12pt;color:#555;font-style:italic;margin:0">${esc(n.subtitle)}</div>` : ''}
+    <div style="font-size:8pt;color:#aaa;margin-top:6px">${new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</div>
+  `;
+  fullContent.appendChild(hdrBlock);
+
+  // Content clone
+  const clone = document.createElement('div');
+  clone.innerHTML = editor.innerHTML;
+  clone.querySelectorAll('.img-toolbar,.img-resize-handle').forEach(el=>el.remove());
+  clone.querySelectorAll('.page-break-marker').forEach(el => {
+    const pb = document.createElement('div');
+    pb.setAttribute('data-forced-break','1');
+    el.replaceWith(pb);
+  });
+  fullContent.appendChild(clone);
+
+  // Measure all top-level block nodes
+  const blocks = Array.from(fullContent.childNodes);
+  
+  // Paginate: walk block by block measuring cumulative height
+  const pages = [];
+  let currentPageEl = document.createElement('div');
+  let currentH = 0;
+  let isFirstPage = true;
+
+  function flushPage() {
+    pages.push(currentPageEl);
+    currentPageEl = document.createElement('div');
+    currentH = 0;
+    isFirstPage = false;
+  }
+
+  function measureNode(node) {
+    const tmp = node.cloneNode(true);
+    measurer.appendChild(tmp);
+    const h = tmp.getBoundingClientRect().height;
+    measurer.removeChild(tmp);
+    return h;
+  }
+
+  function addNodeToPage(node) {
+    // Forced break: flush current page
+    if (node.nodeType === Node.ELEMENT_NODE && node.getAttribute && node.getAttribute('data-forced-break') === '1') {
+      flushPage();
+      return;
+    }
+
+    const h = measureNode(node);
+
+    if (currentH + h > CONTENT_H && currentH > 0) {
+      // Won't fit — try to split block-level containers, or just flush
+      flushPage();
+    }
+
+    currentPageEl.appendChild(node.cloneNode(true));
+    currentH += h;
+  }
+
+  blocks.forEach(addNodeToPage);
+  if (currentPageEl.childNodes.length > 0 || pages.length === 0) {
+    pages.push(currentPageEl);
+  }
+
+  document.body.removeChild(measurer);
+  const totalPages = pages.length;
+
+  // Render pages into the preview scroll
+  const ppStyles = `
+    <style>
+      .pp-c *{box-sizing:border-box}
+      .pp-c p{margin-bottom:7px}
+      .pp-c h1{font-size:18pt;font-weight:700;margin:14px 0 6px;font-family:Georgia,serif}
+      .pp-c h2{font-size:14pt;font-weight:600;margin:12px 0 5px;border-bottom:1px solid #ddd;padding-bottom:3px;font-family:Georgia,serif}
+      .pp-c h3{font-size:11pt;font-weight:700;margin:10px 0 4px;color:#333}
+      .pp-c pre{background:#f4f4f4;border:1px solid #ddd;border-radius:4px;padding:9px 12px;font-size:8.5pt;white-space:pre-wrap;word-break:break-all;margin:10px 0}
+      .pp-c code{font-family:'Courier New',monospace;font-size:9pt;background:#f0f0f0;padding:1px 4px;border-radius:3px}
+      .pp-c pre code{background:none;padding:0;border:none}
+      .pp-c table{border-collapse:collapse;width:100%;margin:10px 0;font-size:9.5pt}
+      .pp-c th{background:#f0f0f0;padding:6px 10px;text-align:left;border-bottom:2px solid #ccc;font-weight:600}
+      .pp-c td{padding:5px 10px;border-bottom:1px solid #e0e0e0}
+      .pp-c blockquote{border-left:3px solid #999;padding:6px 13px;margin:10px 0;color:#555;font-style:italic}
+      .pp-c ul,.pp-c ol{padding-left:20px;margin-bottom:9px}
+      .pp-c li{margin-bottom:3px}
+      .pp-c img{max-width:100%;border-radius:4px}
+      .pp-c mark{background:rgba(255,220,0,.35);padding:1px 3px}
+      .pp-c .callout{padding:8px 12px;background:#f9f9f9;border:1px solid #ddd;border-left:3px solid #aaa;border-radius:4px;margin:10px 0;display:flex;gap:8px;font-size:9.5pt}
+      .pp-c .callout.info{border-left-color:#60a5fa}.pp-c .callout.warn{border-left-color:#e8c547}.pp-c .callout.success{border-left-color:#4ade80}.pp-c .callout.error{border-left-color:#ff5f5f}
+      .pp-c .callout-icon{flex-shrink:0;font-size:13px}
+      .pp-c .math-block{text-align:center;padding:8px;background:#f4f4f8;border-radius:4px;font-size:10pt;margin:10px 0}
+      .pp-c .img-wrap{display:block;border:none!important;margin:10px 0;line-height:normal}
+      .pp-c hr{border:none;border-top:1px solid #ddd;margin:16px 0}
+      .pp-c a{color:#2563eb}
+      .pp-c .img-toolbar,.pp-c .img-resize-handle,.pp-c .page-break-marker{display:none!important}
+    </style>
+  `;
+
+  // Insert styles once
+  const styleHolder = document.createElement('div');
+  styleHolder.innerHTML = ppStyles;
+  scroll.appendChild(styleHolder.firstElementChild);
+
+  pages.forEach((pageContent, idx) => {
     if (idx > 0) {
-      // visual separator between pages
       const sep = document.createElement('div');
       sep.className = 'pp-page-break-line';
       sep.innerHTML = '<span>Page Break</span>';
@@ -1022,52 +1102,20 @@ function openPrintPreview() {
 
     const page = document.createElement('div');
     page.className = 'pp-page';
+    page.style.cssText = `width:${PAGE_W_PX}px;min-height:${PAGE_H_PX}px;background:#fff;color:#111;padding:${MARGIN_PX}px;box-shadow:0 4px 28px rgba(0,0,0,.5);position:relative;font-family:Georgia,serif;font-size:11pt;line-height:1.7;overflow:hidden`;
 
-    // First page gets the note header
-    if (idx === 0) {
-      const hdr = document.createElement('div');
-      hdr.className = 'pp-note-header';
-      hdr.innerHTML = `
-        ${n?.chapter ? `<div class="pp-chapter">${esc(n.chapter)}</div>` : ''}
-        <div class="pp-title">${esc(n?.title || 'Untitled Note')}</div>
-        ${n?.subtitle ? `<div class="pp-subtitle">${esc(n.subtitle)}</div>` : ''}
-        <div class="pp-date">${new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</div>
-      `;
-      page.appendChild(hdr);
-    }
-
-    const content = document.createElement('div');
-    content.className = 'pp-content';
-    content.innerHTML = segHtml;
-    page.appendChild(content);
+    const inner = document.createElement('div');
+    inner.className = 'pp-c';
+    inner.appendChild(pageContent);
+    page.appendChild(inner);
 
     const pnum = document.createElement('div');
-    pnum.className = 'pp-page-num';
-    pnum.textContent = `${idx + 1} / ${segments.length}`;
+    pnum.style.cssText = 'position:absolute;bottom:20px;right:28px;font-size:9pt;color:#aaa;font-family:sans-serif';
+    pnum.textContent = `${idx + 1} / ${totalPages}`;
     page.appendChild(pnum);
 
     scroll.appendChild(page);
   });
-
-  overlay.classList.add('open');
-}
-
-function splitAtPageBreaks(container) {
-  const segments = [];
-  let current = document.createElement('div');
-
-  function processNode(node) {
-    if (node.nodeType === Node.ELEMENT_NODE && node.getAttribute && node.getAttribute('data-page-break') === '1') {
-      segments.push(current.innerHTML);
-      current = document.createElement('div');
-    } else {
-      current.appendChild(node.cloneNode(true));
-    }
-  }
-
-  Array.from(container.childNodes).forEach(processNode);
-  segments.push(current.innerHTML);
-  return segments.filter(s => s.trim() !== '');
 }
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1104,19 +1152,103 @@ document.getElementById('btn-pdf').addEventListener('click',()=>{
   document.getElementById('pdf-filename').value=(n?.title||'note').replace(/\s+/g,'-').toLowerCase();
   openModal('modal-pdf');
 });
+
 function generatePDF() {
-  const fn=document.getElementById('pdf-filename').value||'note';
-  const sz=document.getElementById('pdf-size').value;
-  const or=document.getElementById('pdf-orient').value;
+  const fn = document.getElementById('pdf-filename').value || 'note';
+  const sz = document.getElementById('pdf-size').value;
+  const or = document.getElementById('pdf-orient').value;
   closeModal('modal-pdf');
-  const n=curNote();
-  const wrap=document.createElement('div');
-  wrap.style.cssText='font-family:Georgia,serif;color:#111;line-height:1.7;max-width:700px;margin:0 auto;padding:20px';
-  wrap.innerHTML=`<div style="margin-bottom:24px;border-bottom:2px solid #111;padding-bottom:14px">${n.chapter?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:6px">${x(n.chapter)}</div>`:''}<h1 style="font-size:28px;font-weight:800;margin:0 0 5px;line-height:1.2">${x(n.title||'Untitled')}</h1>${n.subtitle?`<p style="color:#555;font-style:italic;margin:0">${x(n.subtitle)}</p>`:''}<div style="font-size:10px;color:#aaa;margin-top:7px">${new Date().toLocaleDateString()}</div></div><div>${editor.innerHTML}</div>`;
-  const s=document.createElement('style');
-  s.textContent='*{box-sizing:border-box}pre{background:#f4f4f4;border:1px solid #ddd;border-radius:4px;padding:10px;font-size:12px;overflow:auto}code{font-family:monospace}table{border-collapse:collapse;width:100%}th{background:#f0f0f0;padding:7px 10px;text-align:left;border-bottom:2px solid #ccc}td{padding:6px 10px;border-bottom:1px solid #e0e0e0}blockquote{border-left:3px solid #999;padding:7px 14px;margin:10px 0;color:#555}h1{font-size:22px;margin:18px 0 7px}h2{font-size:17px;margin:14px 0 5px;border-bottom:1px solid #ddd;padding-bottom:3px}h3{font-size:14px;margin:10px 0 4px}img{max-width:100%;border-radius:4px}.callout{padding:9px 12px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;margin:10px 0;display:flex;gap:8px}.math-block{text-align:center;padding:10px;background:#f4f4f8;border-radius:4px;font-size:13px}mark{background:rgba(255,220,0,.3);padding:1px 3px}.img-toolbar,.img-resize-handle{display:none!important}.img-wrap{display:block;border:none!important;line-height:normal}';
-  wrap.appendChild(s);
-  html2pdf().set({margin:[14,14,14,14],filename:fn+'.pdf',image:{type:'jpeg',quality:.95},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:sz,orientation:or}}).from(wrap).save();
+  const n = curNote();
+
+  // Build a clean off-screen container with explicit page-break support
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:Georgia,serif;color:#111;line-height:1.7;';
+  document.body.appendChild(container);
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'margin-bottom:24px;border-bottom:2px solid #111;padding-bottom:14px;padding:20px 20px 14px';
+  hdr.innerHTML = `${n.chapter?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:6px">${x(n.chapter)}</div>`:''}<h1 style="font-size:26px;font-weight:800;margin:0 0 5px;line-height:1.2;font-family:Georgia,serif">${x(n.title||'Untitled')}</h1>${n.subtitle?`<p style="color:#555;font-style:italic;margin:4px 0 0;font-size:15px">${x(n.subtitle)}</p>`:''}<div style="font-size:10px;color:#aaa;margin-top:7px">${new Date().toLocaleDateString()}</div>`;
+  container.appendChild(hdr);
+
+  // Content clone — clean up editor-only elements
+  const contentWrap = document.createElement('div');
+  contentWrap.style.cssText = 'padding:0 20px 20px';
+  const clone = document.createElement('div');
+  clone.innerHTML = editor.innerHTML;
+  clone.querySelectorAll('.img-toolbar,.img-resize-handle,.page-break-marker').forEach(el => {
+    // Convert page-break markers to CSS page-break divs
+    if (el.classList.contains('page-break-marker')) {
+      const pb = document.createElement('div');
+      pb.style.cssText = 'page-break-after:always;break-after:page;height:0;display:block';
+      el.replaceWith(pb);
+    } else {
+      el.remove();
+    }
+  });
+  // Flatten dark theme colors to print-safe
+  clone.querySelectorAll('[style]').forEach(el => {
+    const s = el.getAttribute('style') || '';
+    if (s.includes('color:var(') || s.includes('background:var(')) {
+      el.removeAttribute('style');
+    }
+  });
+  contentWrap.appendChild(clone);
+  container.appendChild(contentWrap);
+
+  // Inject print styles
+  const style = document.createElement('style');
+  style.textContent = `
+    *{box-sizing:border-box}
+    p{margin-bottom:8px}
+    h1{font-size:20px;margin:16px 0 7px;font-family:Georgia,serif}
+    h2{font-size:16px;margin:13px 0 5px;border-bottom:1px solid #ddd;padding-bottom:3px;font-family:Georgia,serif}
+    h3{font-size:13px;margin:10px 0 4px;color:#333}
+    pre{background:#f4f4f4;border:1px solid #ddd;border-radius:4px;padding:10px;font-size:11px;white-space:pre-wrap;word-break:break-all;page-break-inside:avoid}
+    code{font-family:'Courier New',monospace;font-size:11px}
+    pre code{background:none;padding:0;border:none;font-size:11px}
+    code:not(pre code){background:#f0f0f0;padding:1px 4px;border-radius:3px;font-size:11px}
+    table{border-collapse:collapse;width:100%;margin:10px 0;font-size:12px;page-break-inside:avoid}
+    th{background:#f0f0f0;padding:7px 10px;text-align:left;border-bottom:2px solid #ccc}
+    td{padding:6px 10px;border-bottom:1px solid #e0e0e0}
+    blockquote{border-left:3px solid #999;padding:7px 14px;margin:10px 0;color:#555;font-style:italic}
+    img{max-width:100%;border-radius:4px;page-break-inside:avoid}
+    .callout{padding:9px 12px;background:#f9f9f9;border:1px solid #ddd;border-left:3px solid #aaa;border-radius:4px;margin:10px 0;display:flex;gap:8px;page-break-inside:avoid}
+    .callout.info{border-left-color:#60a5fa}.callout.warn{border-left-color:#e8c547}.callout.success{border-left-color:#4ade80}.callout.error{border-left-color:#ff5f5f}
+    .math-block{text-align:center;padding:10px;background:#f4f4f8;border-radius:4px;font-size:13px;margin:10px 0}
+    mark{background:rgba(255,220,0,.4);padding:1px 3px}
+    ul,ol{padding-left:22px;margin-bottom:10px}
+    li{margin-bottom:3px}
+    .img-wrap{display:block;border:none!important;line-height:normal;margin:10px 0}
+    hr{border:none;border-top:1px solid #ddd;margin:18px 0}
+  `;
+  container.appendChild(style);
+
+  // Use html2pdf with proper pagebreak config
+  html2pdf().set({
+    margin: [14, 14, 14, 14],
+    filename: fn + '.pdf',
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      letterRendering: true,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 794
+    },
+    jsPDF: { unit: 'mm', format: sz, orientation: or },
+    pagebreak: {
+      mode: ['avoid-all', 'css', 'legacy'],
+      before: '[data-page-break]',
+      after: '.page-break-after',
+      avoid: ['pre', 'table', 'img', '.callout', 'blockquote']
+    }
+  }).from(container).save().then(() => {
+    document.body.removeChild(container);
+  }).catch(() => {
+    document.body.removeChild(container);
+  });
 }
 
 // ── FOCUS MODE ────────────────────────────────────────────
